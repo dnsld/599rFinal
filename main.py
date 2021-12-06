@@ -208,7 +208,7 @@ fig.suptitle('EDA on FEMA Data')
 # graph 1, disasters by year
 sns.countplot(ax=axes[0,0],x='fy_declared',data=df2, palette="rocket")
 axes[0,0].set_title('Disasters by Year')
-axes[0,0].set_xticklabels(ax.get_xticklabels(),rotation = 90)
+axes[0,0].set_xticklabels(axes[0,0].get_xticklabels(),rotation = 90)
 
 # graph 2, disasters by state
 sns.countplot(ax=axes[0,1],x='state',data=df2, palette="crest", order=df2['state'].value_counts().iloc[:15].index)
