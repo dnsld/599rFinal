@@ -30,6 +30,7 @@ new_df_len = df2.shape[0]
 
 # eliminating unnecessary columns
 df2 = df2[['fema_declaration_string','disaster_number','state','incident_type','fy_declared','declaration_date','designated_area']].copy()
+df2 = df2[~(df2['fy_declared'] <= 1981)]
 ### print(df2.dtypes)
 # -------------- #
 
@@ -182,19 +183,12 @@ reg_df = reg_df.rename(columns={0:"disasters"})
 
 
 # regression
-
 X = reg_df[['fy_declared']]
 Y = reg_df['disasters']
 
 regr = linear_model.LinearRegression()
 regr.fit(X, Y)
 Y_pred = regr.predict(X)
-
-plt.scatter(X, Y)
-plt.plot(X, Y_pred, color='red')
-plt.show()
-
-
 
 
 # regions
@@ -211,9 +205,6 @@ northeast = ['NY','PA','NH','VT','MA','RI','CT']
 # -------------- #
 
 
-
-
-
 ### GRAPHS ###
 
 # Housing EDA WORK
@@ -223,7 +214,7 @@ price = px.bar(state_housing,x='state', y='median').update_xaxes(categoryorder='
 # price.show()
 
 # FEMA EDA graphs
-fig, axes = plt.subplots(2,3, sharex=False, sharey=False,  figsize=(15,15) )
+fig, axes = plt.subplots(2,2, sharex=False, sharey=False,  figsize=(15,15) )
 fig.suptitle('EDA on FEMA Data')
 
 # graph 1, disasters by year
@@ -243,4 +234,16 @@ axes[1, 0].set_title('Median Price by State')
 sns.scatterplot(ax=axes[1, 1], x='disasters', y='median_home_price', data=state_all,legend=True,palette="light_palette")
 axes[1, 1].set_title('Disasters x Home Price')
 
+plt.show()
+plt.clf()
+
+# Disaster X Time regression
+plt.scatter(X, Y)
+plt.plot(X, Y_pred, color='red')
+plt.show()
+plt.clf()
+
+# Employment by Region Graph
+region = sns.barplot(x=location_df['region'], y=location_df['percent_of_class'], palette="rocket") #box plot
+region.set_title('Percent of Class by Region')
 plt.show()
