@@ -181,6 +181,19 @@ reg_df = reg_series.reset_index()
 reg_df = reg_df.rename(columns={0:"disasters"})
 
 
+# regression
+
+X = reg_df[['fy_declared']]
+Y = reg_df['disasters']
+
+regr = linear_model.LinearRegression()
+regr.fit(X, Y)
+Y_pred = regr.predict(X)
+
+plt.scatter(X, Y)
+plt.plot(X, Y_pred, color='red')
+plt.show()
+
 
 
 
@@ -201,9 +214,6 @@ northeast = ['NY','PA','NH','VT','MA','RI','CT']
 
 
 
-
-
-
 ### GRAPHS ###
 
 # Housing EDA WORK
@@ -213,7 +223,7 @@ price = px.bar(state_housing,x='state', y='median').update_xaxes(categoryorder='
 # price.show()
 
 # FEMA EDA graphs
-fig, axes = plt.subplots(2,2, sharex=False, sharey=False,  figsize=(15,15) )
+fig, axes = plt.subplots(2,3, sharex=False, sharey=False,  figsize=(15,15) )
 fig.suptitle('EDA on FEMA Data')
 
 # graph 1, disasters by year
@@ -233,4 +243,4 @@ axes[1, 0].set_title('Median Price by State')
 sns.scatterplot(ax=axes[1, 1], x='disasters', y='median_home_price', data=state_all,legend=True,palette="light_palette")
 axes[1, 1].set_title('Disasters x Home Price')
 
-# plt.show()
+plt.show()
