@@ -26,6 +26,7 @@ print(f"The original number of unique FEMA natural disasters was {n_fema_unique}
 # eliminating unnecessary columns
 df2 = df2[['fema_declaration_string','disaster_number','state','incident_type','fy_declared','declaration_date','designated_area']].copy()
 df2 = df2[~(df2['fy_declared'] <= 1981)]
+df2 = df2[~(df2['fy_declared'] >= 2021)]
 
 # -------------- #
 
@@ -188,7 +189,7 @@ fig, axes = plt.subplots(2,2, sharex=False, sharey=False,  figsize=(15,15) )
 fig.suptitle('Disaster and Home Median Price Data')
 
 # graph 1, disasters by year
-sns.countplot(ax=axes[0,0],x='fy_declared',data=df2,palette="rocket")
+sns.countplot(ax=axes[0,0],x='fy_declared',data=df2,palette="rocket_r")
 axes[0,0].set_title('Disasters by Year')
 axes[0,0].set_xticklabels(axes[0,0].get_xticklabels(),rotation = 90)
 
