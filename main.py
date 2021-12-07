@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn import linear_model
 import seaborn as sns
 import plotly.express as px
+import datetime as dt
 
 sns.set()
 
@@ -21,16 +23,15 @@ orig_df['declaration_date'] = orig_df['declaration_date'].apply(lambda x: pd.to_
 ### print(orig_df['declaration_date'].head())
 
 # analyzing only unique FEMA declared natural disasters
-n_fema_uniqe = len(pd.unique(orig_df['fema_declaration_string']))
+n_fema_unique = len(pd.unique(orig_df['fema_declaration_string']))
 df2 = orig_df.drop_duplicates(subset=['fema_declaration_string'])
 new_df_len = df2.shape[0]
-### print(f"The original number of unique FEMA natural disaters was {n_fema_uniqe} and the new number of rows in the updated data frame are {new_df_len}")
+### print(f"The original number of unique FEMA natural disasters was {n_fema_unique} and the new number of rows in the updated data frame are {new_df_len}")
 
 # eliminating unnecessary columns
 df2 = df2[['fema_declaration_string','disaster_number','state','incident_type','fy_declared','declaration_date','designated_area']].copy()
 ### print(df2.dtypes)
 # -------------- #
-
 
 
 ### ZILLOW DATA ###
@@ -118,20 +119,20 @@ percent_missing = round(housing_data.isnull().sum() * 100 / len(housing_data) , 
 pricing_cols = housing_data.iloc[: ,5:-1]
 
 # replacing missing values with 0 to make data ready for computation
-princing_cols_final = pricing_cols.fillna(0)
+pricing_cols_final = pricing_cols.fillna(0)
 
 # verification for NANs in dataframe -final check     @@@@@@@@
-percent_missing = round(princing_cols_final.isnull().sum() * 100 / len(princing_cols_final) , 2)
+percent_missing = round(pricing_cols_final.isnull().sum() * 100 / len(pricing_cols_final), 2)
 ### print(percent_missing)
 
 state_cols = housing_data.iloc[:,0:5]
 state_cols_final = state_cols[['RegionID','RegionName','StateName']]
 
 # calculating the median of month on month house prices
-princing_cols_final['median'] = round(princing_cols_final.median(axis=1),0)
+pricing_cols_final['median'] = round(pricing_cols_final.median(axis=1), 0)
 
-# concatinating the final dataframe to integrate state columns and median prices
-zillow_dataset = result = pd.concat([state_cols_final, princing_cols_final], axis=1)
+# concatenating the final dataframe to integrate state columns and median prices
+zillow_dataset = result = pd.concat([state_cols_final, pricing_cols_final], axis=1)
 zillow_dataset = zillow_dataset[['RegionID','RegionName','StateName','median']]
 zillow_dataset = zillow_dataset.merge(lookup,on='StateName',how='left')
 
@@ -161,23 +162,27 @@ zillow_dataset = zillow_dataset.dropna()
 # creating FEMA reports by state
 series_FEMA = df2.groupby('state', as_index=True)['state'].count()
 state_FEMA = pd.DataFrame({'state':series_FEMA.index, 'count':series_FEMA.values})
-print(len(state_FEMA))
-# need to drop AS, MP, FM, GU, MH, PW
-# 59 values
 
 
 # grouping housing prices by state
 zs = zillow_dataset.groupby('StateName', as_index=True)['median'].mean()
 state_housing = pd.DataFrame({'state':zs.index, 'median':zs.values})
-print(len(state_housing))
-# 39 values
+
 
 # merging state housing price data and FEMA disasters and renaming columns
 state_all = state_FEMA.merge(state_housing, on='state', how='outer')
 state_all = state_all.dropna()
 state_all = state_all.rename(columns={"count":"disasters","median":"median_home_price"})
-print(state_all.head())
-print(len(state_all))
+
+
+# creating a dataframe for regression on incidents over time
+reg_series = df2.groupby(['fy_declared', 'state']).size()
+reg_df = reg_series.reset_index()
+reg_df = reg_df.rename(columns={0:"disasters"})
+
+
+
+
 
 # regions
 # northwest, southwest, midwest, southeast, northeast, east_coast
@@ -193,6 +198,12 @@ northeast = ['NY','PA','NH','VT','MA','RI','CT']
 # -------------- #
 
 
+
+
+
+
+
+
 ### GRAPHS ###
 
 # Housing EDA WORK
@@ -206,7 +217,7 @@ fig, axes = plt.subplots(2,2, sharex=False, sharey=False,  figsize=(15,15) )
 fig.suptitle('EDA on FEMA Data')
 
 # graph 1, disasters by year
-sns.countplot(ax=axes[0,0],x='fy_declared',data=df2, palette="rocket")
+sns.countplot(ax=axes[0,0],x='fy_declared',data=df2,palette="rocket")
 axes[0,0].set_title('Disasters by Year')
 axes[0,0].set_xticklabels(axes[0,0].get_xticklabels(),rotation = 90)
 
@@ -215,11 +226,11 @@ sns.countplot(ax=axes[0,1],x='state',data=df2, palette="crest", order=df2['state
 axes[0,1].set_title('Top 15 States w. Most Disasters')
 
 # graph 3
-sns.barplot(ax=axes[1,0],x='state',y='median',order=state_housing.sort_values('median',ascending=False).state.iloc[:15],data=state_housing,palette="rocket")
-axes[1,0].set_title('Median Price by State')
+sns.barplot(ax=axes[1, 0], x='state', y='median', order=state_housing.sort_values('median', ascending=False).state.iloc[:15], data=state_housing, palette="rocket")
+axes[1, 0].set_title('Median Price by State')
 
 # graph 4
-sns.scatterplot(ax=axes[1,1],x='disasters',y='median_home_price',data=state_all,legend=True,palette="light_palette")
-axes[1,1].set_title('Disasters x Home Price')
+sns.scatterplot(ax=axes[1, 1], x='disasters', y='median_home_price', data=state_all,legend=True,palette="light_palette")
+axes[1, 1].set_title('Disasters x Home Price')
 
-plt.show()
+# plt.show()
